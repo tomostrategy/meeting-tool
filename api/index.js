@@ -98,7 +98,19 @@ export default async function handler(req, res) {
     // Webhook endpoint
     try {
       const { transcript, meetingTitle, participants, source } = req.body;
+
+      const { transcript, meetingTitle, source } = req.body;
+      let { participants } = req.body;
       
+      // Handle participants - convert to array if needed
+      if (typeof participants === 'string') {
+        // If it's a comma-separated string, split it
+        participants = participants.split(',').map(p => p.trim());
+      } else if (!Array.isArray(participants)) {
+        // If it's not an array and not a string, make it an array
+        participants = participants ? [participants] : [];
+      }
+
       if (!transcript) {
         return res.status(400).json({ error: 'Transcript is required' });
       }
