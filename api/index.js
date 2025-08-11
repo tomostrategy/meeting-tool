@@ -137,7 +137,7 @@ export default async function handler(req, res) {
             content: `Extract meaningful action items from this meeting transcript. Only include specific commitments with clear owners and deadlines.
 
 Meeting: ${meetingTitle}
-Participants: ${participants?.join(', ')}
+Participants: ${Array.isArray(participants) ? participants.join(', ') : participants || 'Unknown'}
 Source: ${source || 'Unknown'}
 
 Transcript:
