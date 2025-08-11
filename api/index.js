@@ -97,20 +97,18 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     // Webhook endpoint
     try {
-      const { transcript, meetingTitle, participants, source } = req.body;
-
       const { transcript, meetingTitle, source } = req.body;
-      let { participants } = req.body;
       
-      // Handle participants - convert to array if needed
+      // Handle participants safely - it might come as string, array, or undefined
+      let participants = req.body.participants;
       if (typeof participants === 'string') {
         // If it's a comma-separated string, split it
-        participants = participants.split(',').map(p => p.trim());
+        participants = participants.split(',').map(p => p.trim()).filter(p => p);
       } else if (!Array.isArray(participants)) {
-        // If it's not an array and not a string, make it an array
-        participants = participants ? [participants] : [];
+        // If it's not an array, make it an empty array
+        participants = [];
       }
-
+      
       if (!transcript) {
         return res.status(400).json({ error: 'Transcript is required' });
       }
@@ -136,8 +134,8 @@ export default async function handler(req, res) {
             role: 'user',
             content: `Extract meaningful action items from this meeting transcript. Only include specific commitments with clear owners and deadlines.
 
-Meeting: ${meetingTitle}
-Participants: ${Array.isArray(participants) ? participants.join(', ') : participants || 'Unknown'}
+Meeting: ${meetingTitle || 'Untitled Meeting'}
+Participants: ${participants.length > 0 ? participants.join(', ') : 'Not specified'}
 Source: ${source || 'Unknown'}
 
 Transcript:
@@ -172,7 +170,7 @@ Return JSON format:
       
       return res.json({
         success: true,
-        meetingTitle,
+        meetingTitle: meetingTitle || 'Untitled Meeting',
         tasksExtracted: extractedData.tasks.length,
         tasks: extractedData.tasks,
         message: 'Tasks extracted successfully!'
